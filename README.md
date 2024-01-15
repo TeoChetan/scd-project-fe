@@ -7,8 +7,3 @@ npm i
 ```
 npm run dev
 ```
-
-3. Check browser console
-
-
-![alt schema](./schema.png)
