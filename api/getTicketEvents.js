@@ -1,5 +1,6 @@
-export function getTicketCategories() {
-  const result = fetch(`/api/ticketCategory`, {
+export function getTicketEvents(filters) {
+  const queryParams = new URLSearchParams(filters).toString();
+  const result = fetch(`/api/ticketEvents?${queryParams}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

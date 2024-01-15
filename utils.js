@@ -1,5 +1,4 @@
-import { createEvent } from './components/createEvent';
-
+import { createEvent } from "./createEventElement";
 /**
  *
  * @param {import("./mocks/database").TicketEvent} data
@@ -13,8 +12,10 @@ export const addPurchase = (data) => {
 
 /**
  *
- * @param {import("./mocks/database").TicketEvent[]} events
+ *@param {import("./mocks/database").TicketEvent[]} events
  */
+
+  
 export const addEvents = (events) => {
   const eventsDiv = document.querySelector('.events');
   eventsDiv.innerHTML = 'No events available';
@@ -32,7 +33,7 @@ export const addEvents = (events) => {
  * @param {string} str
  * @returns {string}
  */
-export const kebabCase = (str) => str.replaceAll(' ', '-');
+//export const kebabCase = (str) => str.replaceAll(' ', '-');
 /**
  *
  * @param {string} searchTerm

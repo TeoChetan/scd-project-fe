@@ -1,21 +1,21 @@
-import { kebabCase } from '../utils';
-import { updateOrder } from './api/updateOrder.js';
-import { deleteOrder } from './api/deleteOrder.js';
-import { useStyle } from './styles';
+//import { kebabCase } from './utils';
+import { useStyle } from './src/styles';
 import { addLoader, removeLoader } from './loader';
+import { deleteOrder } from './deleteOrder';
+import { updateOrder } from './updateOrder';
 
-export const createOrderItem = (categories, order) => {
+export const createOrderItem = (ticketsCategory, order) => {
   const purchase = document.createElement('div');
-  purchase.id = `purchase-${order.id}`;
+  purchase.id = `purchase-${order.ordersId}`;
   purchase.classList.add(...useStyle('purchase'));
   const purchaseTitle = createParagraph(...useStyle('purchaseTitle'));
-  purchaseTitle.innerText = kebabCase(order.event.name);
+ purchaseTitle.innerText = (order.event.eventName);
   purchase.appendChild(purchaseTitle);
 
   const purchaseQuantity = createInput(...useStyle('purchaseQuantity'));
   purchaseQuantity.type = 'number';
   purchaseQuantity.min = '1';
-  purchaseQuantity.value = `${order.tickets.length}`;
+  purchaseQuantity.value = `${order.numberOfTickets}`;
   purchaseQuantity.disabled = true;
 
   const purchaseQuantityWrapper = createDiv(...useStyle('purchaseQuantityWrapper'));
@@ -23,21 +23,50 @@ export const createOrderItem = (categories, order) => {
   purchase.appendChild(purchaseQuantityWrapper);
 
   const purchaseType = createSelect(...useStyle('purchaseType'));
-  purchaseType.setAttribute('disabled', 'true');
+  purchaseType.setAttribute('disabled', 'true');    
 
-  const categoriesOptions = categories.map(
-    (ticketCategory) =>
-      `<option class="text-sm font-bold text-black" value=${ticketCategory.id} ${
-        ticketCategory.id === order.tickets[0].ticketCategory.id ? 'selected' : ''
-      }>${ticketCategory.description}</option>`
-  ).join('\n');
 
-  purchaseType.innerHTML = categoriesOptions;
+
+// const categoriesOptions = ticketsCategory?.map(
+//   (tc) =>
+//     `<option class="text-sm font-bold text-black" value=${tc.ticketCategoryId} ${
+//       tc.ticketCategoryId === order.ticketCategoryId ? 'selected' : ''
+//     }>${tc.ticketsCategory.description}</option>`
+// ).join('\n');
+
+// const categoriesOptions= ticketsCategory?.map(tc => {
+//   const selectedAttr = tc.ticketCategoryId === selectedCategoryId ? 'selected' : '';
+//   const description = tc.description;
+//   return `<option class="text-sm font-bold text-black" value="${tc.ticketCategoryId}" ${selectedAttr}>${description}</option>`;
+// }).join('\n');
+  let ticketCategoryOptions = new Array();
+    const buyedOptionString = `<option value=${order.ticketsCategory.ticketCategoryId}>${order.ticketsCategory.description}</option>`;
+    ticketCategoryOptions.push(buyedOptionString);
+    order.event.listTicketCategory?.map(
+    (tc) =>{
+      if(tc.ticketCategoryId != order.ticketsCategory.ticketCategoryId){
+        const str = `<option value=${tc.ticketCategoryId}>${tc.description}</option>`;
+        ticketCategoryOptions.push(str);
+      }
+    }
+    );
+
+    const eventNameWithoutSpaces = order.event.eventName.replace(/\s/g, '');
+    const ticketTypeMarkup = `
+    <select id="ticketType" name="ticketType" class="select ${eventNameWithoutSpaces}-ticket-type border">
+      ${ticketCategoryOptions}
+    </select>
+    `; 
+    purchaseType.innerHTML = ticketTypeMarkup;
+
+
+
+//purchaseType.innerHTML = categoriesOptions;
   const purchaseTypeWrapper = createDiv(...useStyle('purchaseTypeWrapper'));
   purchaseTypeWrapper.append(purchaseType);
   purchase.appendChild(purchaseTypeWrapper);
   const purchaseDate = createDiv(...useStyle('purchaseDate'));
-  purchaseDate.innerText = new Date(order.orderDate).toLocaleDateString();
+  purchaseDate.innerText = new Date(order.timeStamp).toLocaleDateString();
   purchase.appendChild(purchaseDate);
   const purchasePrice = createDiv(...useStyle('purchasePrice'));
   purchasePrice.innerText = order.totalPrice;
@@ -103,15 +132,15 @@ export const createOrderItem = (categories, order) => {
   function saveHandler() {
     const newType = purchaseType.value;
     const newQuantity = purchaseQuantity.value;
-    if (newType != order.tickets[0].ticketCategory.id || newQuantity != order.tickets.length) {
+    if (newType != order.ticketCategoryId || newQuantity != order.numberOfTickets.length) {
       addLoader();
-      updateOrder(order.id, newType, newQuantity)
+      updateOrder(order.ordersId, newType, newQuantity)
         .then((res) => {
           if (res.status === 200) {
             res.json().then((data) => {
               order = data;
               purchasePrice.innerText = order.totalPrice;
-              purchaseDate.innerText = new Date(order.orderDate).toLocaleDateString();
+              purchaseDate.innerText = new Date(order.orderedAt).toLocaleDateString();
             });
           }
         })
@@ -134,18 +163,18 @@ export const createOrderItem = (categories, order) => {
     cancelButton.classList.add('hidden');
     editButton.classList.remove('hidden');
     Array.from(purchaseType.options).forEach(function (element, index) {
-      if (element.value == order.tickets[0].ticketCategory.id) {
+      if (element.value == order.ticketsCategory.ticketsCategoryId) {
         purchaseType.options.selectedIndex = index;
         return;
       }
     });
-    purchaseQuantity.value = order.tickets.length;
+    purchaseQuantity.value = order.numberOfTickets;
     purchaseType.setAttribute('disabled', 'true');
     purchaseQuantity.setAttribute('disabled', 'true');
   }
 
   function deleteHandler() {
-    deleteOrder(order.id);
+    deleteOrder(order.ordersId);
   }
 
   return purchase;
